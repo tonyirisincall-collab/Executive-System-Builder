@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RA — Executive System Builder</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23c8400a'/%3E%3Cstop offset='100%25' stop-color='%23ff6b2b'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='7' fill='url(%23g)'/%3E%3Ctext x='50%25' y='56%25' dominant-baseline='middle' text-anchor='middle' font-family='Georgia,serif' font-weight='700' font-size='10' fill='white' letter-spacing='-0.3'%3ERA%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f4f2ee;--surface:#fff;--surface2:#edeae4;--border:#d8d3cb;
+  --text:#18160f;--text2:#6e6860;--accent:#c8400a;--accent2:#8c2c06;
+  --accent-glow:rgba(200,64,10,.18);--accent-light:#fef1ea;
+  --green:#1a7a4a;--green-light:#eaf7f0;--input-bg:#faf9f7;
+  --shadow-sm:0 1px 4px rgba(0,0,0,.07);--shadow:0 4px 20px rgba(0,0,0,.10);
+  --shadow-lg:0 12px 48px rgba(0,0,0,.16);--r:8px;
+  --font:'Syne','IBM Plex Sans Arabic',sans-serif;
+  --font-ar:'IBM Plex Sans Arabic',sans-serif;
+  --mono:'IBM Plex Mono',monospace;--topbar-h:58px;
+}
+[data-dark] {
+  --bg:#0d0c09;--surface:#171510;--surface2:#201e19;--border:#333028;
+  --text:#ede9e2;--text2:#7a7268;--accent:#e05520;--accent2:#ff6e38;
+  --accent-glow:rgba(224,85,32,.22);--accent-light:#251408;
+  --green:#3dba7a;--green-light:#0d2419;--input-bg:#1c1a14;
+  --shadow-sm:0 1px 4px rgba(0,0,0,.3);--shadow:0 4px 20px rgba(0,0,0,.4);
+  --shadow-lg:0 12px 48px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;transition:background .35s,color .35s;overflow-x:hidden}
+
+/* ANIMATIONS */
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.93)}to{opacity:1;transform:scale(1)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+@keyframes shimmer{from{background-position:-200% 0}to{background-position:200% 0}}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 var(--accent-glow)}50%{box-shadow:0 0 0 10px transparent}}
+@keyframes bounce{0%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+
+/* LOGIN */
+#login-screen{
+  position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  z-index:9999;transition:opacity .5s ease;
+}
+#login-screen.hidden{opacity:0;pointer-events:none}
+.login-bg{position:absolute;inset:0;background:linear-gradient(135deg,#1a150e 0%,#2d1f0a 40%,#0f0e0b 100%);overflow:hidden}
+.login-bg-orb{position:absolute;border-radius:50%;filter:blur(80px);animation:float 6s ease-in-out infinite}
+.login-bg-orb:nth-child(1){width:500px;height:500px;background:radial-gradient(circle,rgba(200,64,10,.38),transparent 70%);top:-150px;right:-100px}
+.login-bg-orb:nth-child(2){width:350px;height:350px;background:radial-gradient(circle,rgba(200,120,10,.22),transparent 70%);bottom:-80px;left:-60px;animation-delay:-3s}
+.login-bg-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:40px 40px}
+
+/* Brutalist card wrapper */
+.login-wrapper{
+  position:relative;z-index:1;
+  display:flex;flex-direction:column;align-items:center;gap:22px;
+  animation:scaleIn .6s cubic-bezier(.22,1,.36,1);
+}
+.login-app-label{
+  color:rgba(255,255,255,.45);font-size:10px;font-weight:700;
+  letter-spacing:.22em;text-transform:uppercase;font-family:var(--mono);
+  text-align:center;
+}
+.login-container{
+  position:relative;perspective:1000px;width:260px;
+}
+.login-card{
+  position:relative;width:100%;height:80px;
+  background:linear-gradient(135deg,#ff3366,#ff6b35);
+  border:4px solid #000;
+  box-shadow:8px 8px 0 #000,16px 16px 0 rgba(255,51,102,.3);
+  cursor:pointer;overflow:hidden;
+  transition:all 0.5s cubic-bezier(0.68,-0.55,0.265,1.55);
+  transform-style:preserve-3d;font-family:var(--font);
+}
+.login-card:hover{
+  height:268px;
+  transform:translateZ(20px) rotateX(5deg) rotateY(-5deg);
+  box-shadow:12px 12px 0 #000,24px 24px 0 rgba(255,51,102,.4),0 0 50px rgba(255,51,102,.6);
+}
+.login-title-bar{
+  position:absolute;top:0;left:0;width:100%;height:80px;
+  display:flex;align-items:center;justify-content:center;
+  background:inherit;transition:all 0.4s ease;
+}
+.login-text{
+  color:#000;font-weight:800;font-size:15px;text-transform:uppercase;
+  letter-spacing:3px;text-shadow:2px 2px 0 rgba(255,255,255,.3);
+  transition:all 0.4s ease;
+}
+.login-card:hover .login-text{opacity:0;transform:translateY(-30px) scale(0.8)}
+.login-form-inner{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:16px 18px;
+  opacity:0;transform:translateY(30px) scale(0.8);
+  transition:all 0.5s cubic-bezier(0.175,0.885,0.32,1.275);
+  gap:0;
+}
+.login-card:hover .login-form-inner{opacity:1;transform:translateY(0) scale(1)}
+.login-input-group{position:relative;width:100%;margin-bottom:12px}
+.login-input{
+  width:100%;padding:10px 10px;
+  background:rgba(255,255,255,.9);border:3px solid #000;
+  font-weight:700;font-size:12px;color:#000;
+  font-family:var(--font);
+  box-shadow:4px 4px 0 #000;
+  transition:all 0.3s cubic-bezier(0.68,-0.55,0.265,1.55);
+  outline:none;
+}
+.login-input:focus{transform:translate(2px,2px);box-shadow:2px 2px 0 #000}
+.login-input::placeholder{color:#000;opacity:0.5;font-size:11px;font-weight:600}
+.login-submit{
+  width:100%;padding:10px;background:#000;color:#fff;border:none;
+  font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:2px;
+  cursor:pointer;font-family:var(--font);
+  box-shadow:4px 4px 0 rgba(255,255,255,.3);
+  transition:all 0.3s cubic-bezier(0.68,-0.55,0.265,1.55);
+}
+.login-submit:hover{transform:translate(2px,2px);box-shadow:2px 2px 0 rgba(255,255,255,.3);background:#222}
+/* Glitch sweep */
+.login-card::before{
+  content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);
+  transition:left 0.7s cubic-bezier(0.25,0.46,0.45,0.94);
+}
+.login-card:hover::before{left:100%}
+/* Corner accent */
+.login-card::after{
+  content:'';position:absolute;top:-4px;right:-4px;width:20px;height:20px;
+  background:#000;clip-path:polygon(0 0,100% 0,100% 100%);
+  transition:all 0.6s ease;
+}
+.login-card:hover::after{transform:scale(1) rotate(0deg);background:rgb(246,168,116)}
+/* Pulse ring */
+.login-container::before{
+  content:'';position:absolute;top:50%;left:50%;width:0;height:0;
+  background:rgba(255,51,102,.1);border-radius:50%;
+  transform:translate(-50%,-50%);transition:all 0.6s ease;z-index:-1;
+}
+.login-container:hover::before{width:420px;height:420px}
+.login-error{
+  color:#ff6b6b;font-size:11px;font-weight:700;text-align:center;
+  margin-top:4px;display:none;animation:fadeIn .2s ease;
+  background:rgba(0,0,0,.65);padding:7px 14px;
+  border:2px solid #ff3366;letter-spacing:.03em;
+  font-family:var(--mono);max-width:260px;
+}
+
+/* APP */
+#app{display:none;min-height:100vh}
+#app.visible{display:block;animation:fadeIn .4s ease}
+
+/* TOPBAR */
+.topbar{
+  background:var(--surface);border-bottom:1px solid var(--border);
+  height:var(--topbar-h);padding:0 20px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:200;box-shadow:var(--shadow-sm);
+  transition:background .35s,border-color .35s;
+}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.topbar-logo{
+  width:36px;height:36px;background:linear-gradient(135deg,var(--accent),#e85c20);
+  border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-size:17px;color:#fff;box-shadow:0 3px 10px var(--accent-glow);
+  transition:transform .25s;cursor:default;flex-shrink:0;
+}
+.topbar-logo:hover{transform:rotate(-8deg) scale(1.08)}
+.topbar-name{font-size:14px;font-weight:800;letter-spacing:-.02em}
+.topbar-ver{font-size:10px;color:var(--text2);font-family:var(--mono)}
+.topbar-right{display:flex;align-items:center;gap:6px}
+
+/* Language pill — improved */
+.lang-pill{
+  display:flex;align-items:center;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:22px;padding:3px;gap:2px;
+  transition:border-color .2s;
+}
+.lang-pill:hover{border-color:var(--accent)}
+.lang-opt{
+  height:28px;padding:0 12px;border-radius:18px;border:none;
+  font-family:var(--font);font-size:11px;font-weight:800;
+  cursor:pointer;color:var(--text2);background:transparent;
+  transition:all .22s cubic-bezier(.22,1,.36,1);
+  display:flex;align-items:center;gap:5px;white-space:nowrap;
+}
+.lang-opt .flag{font-size:13px}
+.lang-opt.active{
+  background:var(--accent);color:#fff;
+  box-shadow:0 2px 10px var(--accent-glow);
+  transform:scale(1.03);
+}
+.lang-opt:not(.active):hover{color:var(--text);background:var(--border)}
+
+.dark-btn{
+  width:34px;height:34px;border-radius:8px;border:1px solid var(--border);
+  background:var(--surface2);color:var(--text2);display:flex;align-items:center;
+  justify-content:center;cursor:pointer;font-size:16px;transition:all .18s;
+}
+.dark-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
+
+.tb-btn{
+  height:34px;padding:0 12px;border-radius:8px;border:1px solid var(--border);
+  background:var(--surface2);color:var(--text);font-family:var(--font);
+  font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;
+  transition:all .18s;
+}
+.tb-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
+.tb-btn svg{width:14px;height:14px;flex-shrink:0}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:340px 1fr;min-height:calc(100vh - var(--topbar-h))}
+
+/* SIDEBAR */
+.sidebar{
+  background:var(--surface);border-inline-end:1px solid var(--border);
+  padding:18px 16px 28px;height:calc(100vh - var(--topbar-h));
+  overflow-y:auto;position:sticky;top:var(--topbar-h);transition:background .35s;
+}
+.sidebar::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+.sb-section{margin-bottom:18px;animation:fadeUp .45s cubic-bezier(.22,1,.36,1) both}
+.sb-section:nth-child(1){animation-delay:.05s}
+.sb-section:nth-child(2){animation-delay:.12s}
+.sb-section:nth-child(3){animation-delay:.19s}
+.sb-section:nth-child(4){animation-delay:.26s}
+.sb-section:nth-child(5){animation-delay:.33s}
+.sb-section:nth-child(6){animation-delay:.40s}
+.sb-section:nth-child(7){animation-delay:.47s}
+
+.sb-head{display:flex;align-items:center;gap:8px;margin-bottom:11px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.sb-num{
+  width:20px;height:20px;background:var(--accent);color:#fff;border-radius:50%;
+  font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.sb-title{font-size:12px;font-weight:800;letter-spacing:.02em}
+
+.field{margin-bottom:11px}
+.field-label{
+  display:block;font-size:10.5px;font-weight:800;color:var(--text2);
+  margin-bottom:4px;letter-spacing:.05em;text-transform:uppercase;
+}
+
+/* Smart example — richer design */
+.field-example{
+  font-size:10.5px;color:var(--text);line-height:1.6;
+  padding:8px 11px 7px;
+  background:var(--surface2);
+  border:1px dashed var(--border);
+  border-inline-start:3px solid var(--accent);
+  border-radius:0 6px 6px 0;
+  cursor:pointer;margin-bottom:5px;
+  transition:background .15s,border-color .15s,transform .1s;
+  position:relative;white-space:pre-wrap;
+}
+.field-example:hover{background:var(--accent-light);border-color:var(--accent);transform:translateX(2px)}
+.field-example::before{
+  content:'💡 Example';display:block;font-weight:800;font-size:9px;
+  color:var(--accent);margin-bottom:3px;letter-spacing:.05em;text-transform:uppercase;
+}
+.field-example .ex-hint{
+  display:block;font-size:9px;color:var(--text2);margin-top:4px;
+  font-style:italic;opacity:.75;
+}
+.field-example .ex-hint::before{content:'↑ '}
+
+.form-input,.form-textarea{
+  width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--r);
+  background:var(--input-bg);color:var(--text);font-family:var(--font);font-size:13px;
+  outline:none;resize:vertical;transition:border-color .2s,box-shadow .2s,background .2s;
+}
+.form-input:focus,.form-textarea:focus{
+  border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow);background:var(--surface);
+}
+.form-textarea{min-height:62px}
+
+.sep{height:1px;background:var(--border);margin:14px 0}
+
+/* Checklist */
+.chk-item{
+  display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:7px;
+  cursor:pointer;margin-bottom:3px;transition:background .15s,transform .12s;user-select:none;
+}
+.chk-item:hover{background:var(--surface2);transform:translateX(3px)}
+.chk-item input{accent-color:var(--accent);width:14px;height:14px;flex-shrink:0}
+.chk-item span{font-size:12px;line-height:1.4}
+
+/* AI Box */
+.ai-box{
+  border:1.5px solid var(--accent);border-radius:12px;padding:14px;
+  margin-bottom:12px;background:var(--accent-light);position:relative;overflow:hidden;
+}
+.ai-box::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(200,64,10,.07),transparent);
+  background-size:200% 100%;animation:shimmer 3s linear infinite;
+}
+.ai-box-head{
+  display:flex;align-items:center;gap:7px;font-size:12px;font-weight:800;
+  color:var(--accent);margin-bottom:10px;letter-spacing:.02em;
+}
+.ai-box-head .bounce{animation:bounce 2s ease-in-out infinite;display:inline-block}
+.ai-lang-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.ai-lang-label{font-size:10px;color:var(--text2);font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.ai-lang-btns{display:flex;gap:3px;background:var(--surface);border-radius:8px;padding:3px;border:1px solid var(--border)}
+.ai-lang-btn{
+  padding:4px 11px;border-radius:6px;border:none;font-family:var(--font);
+  font-size:11px;font-weight:800;cursor:pointer;color:var(--text2);background:transparent;
+  transition:all .2s;display:flex;align-items:center;gap:4px;
+}
+.ai-lang-btn.active{background:var(--accent);color:#fff;box-shadow:0 2px 6px var(--accent-glow)}
+
+.enhance-btn{
+  width:100%;padding:11px;
+  background:linear-gradient(135deg,var(--accent),#e85c20);
+  color:#fff;border:none;border-radius:9px;
+  font-family:var(--font);font-size:13px;font-weight:800;cursor:pointer;
+  letter-spacing:.02em;display:flex;align-items:center;justify-content:center;gap:7px;
+  transition:transform .15s,box-shadow .2s,filter .15s;
+  box-shadow:0 4px 16px var(--accent-glow);margin-bottom:7px;position:relative;
+}
+.enhance-btn:hover{filter:brightness(1.08);transform:translateY(-1px);box-shadow:0 7px 22px var(--accent-glow)}
+.enhance-btn:active:not(:disabled){transform:scale(.98)}
+.enhance-btn:disabled{opacity:.55;cursor:not-allowed}
+.ai-note{font-size:10px;color:var(--text2);text-align:center;line-height:1.5;position:relative}
+
+.gen-btn{
+  width:100%;padding:13px;background:var(--text);color:var(--bg);border:none;
+  border-radius:10px;font-family:var(--font);font-size:14px;font-weight:800;
+  cursor:pointer;letter-spacing:.01em;display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:transform .15s,box-shadow .2s,opacity .2s;box-shadow:var(--shadow);margin-bottom:10px;
+}
+.gen-btn:hover{opacity:.87;transform:translateY(-1px);box-shadow:var(--shadow-lg)}
+.gen-btn:active{transform:scale(.98)}
+
+.action-row{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.action-btn{
+  padding:9px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);
+  color:var(--text);font-family:var(--font);font-size:11px;font-weight:700;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;
+  transition:all .18s;
+}
+.action-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
+
+.saved-list{margin-top:10px;animation:fadeIn .25s ease}
+.saved-item{
+  display:flex;align-items:center;justify-content:space-between;padding:8px 11px;
+  border:1px solid var(--border);border-radius:8px;margin-bottom:5px;
+  background:var(--surface2);cursor:pointer;transition:border-color .15s,transform .15s,box-shadow .15s;
+}
+.saved-item:hover{border-color:var(--accent);transform:translateX(2px);box-shadow:var(--shadow-sm)}
+.saved-item-name{font-size:12px;font-weight:700}
+.saved-item-date{font-size:10px;color:var(--text2);font-family:var(--mono)}
+.saved-del{font-size:13px;color:var(--text2);background:none;border:none;cursor:pointer;padding:2px 5px;border-radius:4px;transition:color .15s,background .15s}
+.saved-del:hover{color:#d63b3b;background:rgba(214,59,59,.1)}
+
+/* PREVIEW */
+.preview-area{background:var(--bg);padding:28px 32px;display:flex;flex-direction:column;align-items:center;transition:background .35s}
+.preview-bar{width:100%;max-width:860px;display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.preview-label{
+  font-size:10px;color:var(--text2);font-weight:800;letter-spacing:.08em;
+  text-transform:uppercase;display:flex;align-items:center;gap:7px;
+}
+.preview-label::before{content:'';width:7px;height:7px;background:var(--accent);border-radius:50%;animation:pulse 2s ease-in-out infinite}
+.preview-actions{display:flex;gap:7px}
+.exp-btn{
+  height:34px;padding:0 14px;border-radius:8px;border:1px solid var(--border);
+  background:var(--surface);color:var(--text);font-family:var(--font);font-size:12px;font-weight:700;
+  cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .18s;
+}
+.exp-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
+.exp-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 3px 10px var(--accent-glow)}
+.exp-btn.primary:hover{background:var(--accent2);border-color:var(--accent2)}
+
+.paper-wrap{
+  width:100%;max-width:860px;border-radius:6px;overflow:hidden;
+  box-shadow:0 8px 48px rgba(0,0,0,.18),0 2px 8px rgba(0,0,0,.08);
+  transition:box-shadow .35s;
+}
+.paper-wrap:hover{box-shadow:0 14px 60px rgba(0,0,0,.22),0 2px 8px rgba(0,0,0,.08)}
+
+/* A4 DOC */
+#a4-doc{
+  background:#fff;width:100%;min-height:1122px;padding:44px 54px;
+  font-family:'IBM Plex Sans Arabic','Syne',sans-serif;color:#111;direction:rtl;
+}
+#a4-doc[data-lang="en"]{direction:ltr;font-family:'Syne','IBM Plex Sans Arabic',sans-serif}
+
+.doc-hdr{position:relative;padding-bottom:22px;margin-bottom:26px;border-bottom:2.5px solid #111}
+.doc-hdr-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.doc-company-name{font-size:10px;color:#999;letter-spacing:.12em;text-transform:uppercase;font-family:'IBM Plex Mono',monospace}
+.doc-date{font-size:10px;color:#aaa;font-family:'IBM Plex Mono',monospace}
+.doc-title{font-size:28px;font-weight:800;color:#111;letter-spacing:-.03em;margin-bottom:4px;line-height:1.1}
+.doc-subtitle{font-size:12px;color:#666;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.doc-badge{display:inline-flex;align-items:center;gap:4px;background:#111;color:#fff;font-size:9px;font-weight:800;padding:2px 8px;border-radius:20px;letter-spacing:.05em}
+.doc-badge.ai-badge{background:linear-gradient(135deg,#c8400a,#e85c20)}
+
+.doc-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.doc-full{grid-column:1/-1}
+
+.doc-block{border:1px solid #e0ddd8;border-radius:7px;overflow:hidden;break-inside:avoid}
+.doc-block-head{background:#f5f3ee;padding:7px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #e0ddd8}
+.doc-block-num{width:17px;height:17px;background:#c8400a;color:#fff;border-radius:50%;font-size:8.5px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.doc-block-title{font-size:10.5px;font-weight:800;color:#444;letter-spacing:.03em;text-transform:uppercase}
+.doc-block-body{padding:11px 14px;font-size:12.5px;color:#222;min-height:52px;line-height:1.75;white-space:pre-wrap}
+.doc-block-body.tall{min-height:86px}
+.doc-block-body.empty{color:#bbb;font-style:italic;font-size:11px}
+
+.doc-golden{
+  background:linear-gradient(135deg,#fff8f5,#fef2ea);border:1.5px solid #c8400a;
+  border-radius:9px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;gap:14px;
+}
+.doc-golden-icon{font-size:24px;flex-shrink:0}
+.doc-golden-text{font-size:13.5px;font-weight:800;color:#c8400a;margin-bottom:2px}
+.doc-golden-sub{font-size:11px;color:#888}
+
+.doc-checklist{padding:11px 14px;display:grid;grid-template-columns:1fr 1fr;gap:6px 24px}
+.doc-chk-item{display:flex;align-items:center;gap:7px;font-size:11.5px;color:#333}
+.doc-chk-box{width:14px;height:14px;border:1.5px solid #aaa;border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px}
+.doc-chk-box.done{background:#c8400a;border-color:#c8400a;color:#fff}
+
+.doc-footer{margin-top:30px;padding-top:14px;border-top:1px solid #ddd;display:flex;justify-content:space-between;align-items:center}
+.doc-footer-txt{font-size:10px;color:#bbb;font-family:'IBM Plex Mono',monospace}
+
+.doc-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:500px;text-align:center;color:#ccc}
+.doc-ph-icon{font-size:52px;margin-bottom:16px;animation:float 3s ease-in-out infinite}
+.doc-ph-title{font-size:17px;font-weight:700;color:var(--text2);margin-bottom:6px}
+.doc-ph-sub{font-size:13px;max-width:300px;line-height:1.6;color:var(--text2)}
+
+/* AI OVERLAY */
+.ai-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:8888;animation:fadeIn .25s ease}
+.ai-overlay-card{background:var(--surface);border-radius:18px;padding:40px 52px;text-align:center;max-width:340px;box-shadow:var(--shadow-lg);animation:scaleIn .35s cubic-bezier(.22,1,.36,1)}
+.ai-spinner{width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .75s linear infinite;margin:0 auto 18px}
+.ai-overlay-title{font-size:16px;font-weight:800;margin-bottom:6px}
+.ai-overlay-sub{font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:14px}
+.ai-steps{display:flex;flex-direction:column;gap:6px}
+.ai-step{font-size:11.5px;color:var(--text2);display:flex;align-items:center;gap:7px;padding:6px 10px;border-radius:7px;background:var(--surface2);transition:all .3s}
+.ai-step.active{color:var(--accent);font-weight:700;background:var(--accent-light)}
+.ai-step-dot{width:6px;height:6px;border-radius:50%;background:var(--border);flex-shrink:0;transition:background .3s}
+.ai-step.active .ai-step-dot{background:var(--accent);animation:pulse .8s ease-in-out infinite}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:24px;inset-inline-end:24px;
+  background:#18160f;color:#fff;padding:11px 18px;border-radius:10px;
+  font-size:13px;font-weight:600;opacity:0;transform:translateY(10px);
+  transition:opacity .25s,transform .25s;z-index:9999;pointer-events:none;
+  border-inline-start:3px solid var(--accent);box-shadow:var(--shadow-lg);max-width:300px;
+}
+.toast.show{opacity:1;transform:translateY(0)}
+[data-dark] .toast{background:#ede9e2;color:#18160f}
+
+@media print{
+  body *{visibility:hidden}
+  #a4-doc,#a4-doc *{visibility:visible}
+  #a4-doc{position:fixed;top:0;left:0;width:210mm;padding:15mm 18mm;box-shadow:none;min-height:auto}
+  .topbar,.sidebar,.preview-bar{display:none!important}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-bg">
+    <div class="login-bg-orb"></div>
+    <div class="login-bg-orb"></div>
+    <div class="login-bg-grid"></div>
+  </div>
+  <div class="login-wrapper">
+    <div class="login-app-label">⚡ Executive System Builder</div>
+    <div class="login-container">
+      <div class="login-card">
+        <div class="login-title-bar">
+          <span class="login-text">Sign In</span>
+        </div>
+        <div class="login-form-inner">
+          <div class="login-input-group">
+            <input class="login-input" type="text" id="inp-user" placeholder="Username" autocomplete="username" required>
+          </div>
+          <div class="login-input-group">
+            <input class="login-input" type="password" id="inp-pass" placeholder="Password" autocomplete="current-password" required>
+          </div>
+          <button class="login-submit" onclick="doLogin()">ENTER ZONE</button>
+        </div>
+      </div>
+    </div>
+    <div class="login-error" id="login-error">Invalid credentials — try again</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo" style="font-family:'Georgia',serif;font-size:10px;font-weight:700;letter-spacing:-.3px">RA</div>
+      <div>
+        <div class="topbar-name" id="tb-name">Executive System Builder</div>
+        <div class="topbar-ver">RA · Executive System Builder</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="lang-pill">
+        <button class="lang-opt active" id="lopt-en" onclick="switchLang('en')">
+          <span class="flag">🇬🇧</span> EN
+        </button>
+        <button class="lang-opt" id="lopt-ar" onclick="switchLang('ar')">
+          <span class="flag">🇸🇦</span> AR
+        </button>
+      </div>
+      <button class="dark-btn" id="dark-btn" onclick="toggleDark()">🌙</button>
+      <button class="tb-btn" onclick="logout()">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"/></svg>
+        <span id="tb-logout">Logout</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+
+      <div class="sb-section">
+        <div class="sb-head"><div class="sb-num">1</div><div class="sb-title" id="s1-title">Foundation & Objective</div></div>
+        <div class="field">
+          <label class="field-label" id="l-name">System Name</label>
+          <div class="field-example" id="ex-name" onclick="useExample('f-name','ex-name')"></div>
+          <input class="form-input" id="f-name">
+        </div>
+        <div class="field">
+          <label class="field-label" id="l-company">Company / Department</label>
+          <div class="field-example" id="ex-company" onclick="useExample('f-company','ex-company')"></div>
+          <input class="form-input" id="f-company">
+        </div>
+        <div class="field">
+          <label class="field-label" id="l-sit">Current Situation / Problem</label>
+          <div class="field-example" id="ex-sit" onclick="useExample('f-situation','ex-sit')"></div>
+          <textarea class="form-textarea" id="f-situation"></textarea>
+        </div>
+        <div class="field">
+          <label class="field-label" id="l-obj">Measurable Objective</label>
+          <div class="field-example" id="ex-obj" onclick="useExample('f-objective','ex-obj')"></div>
+          <textarea class="form-textarea" id="f-objective"></textarea>
+        </div>
+      </div>
+
+      <div class="sep"></div>
+
+      <div class="sb-section">
+        <div class="sb-head"><div class="sb-num">2</div><div class="sb-title" id="s2-title">Workflow & Decision Rules</div></div>
+        <div class="field">
+          <label class="field-label" id="l-wf">Workflow / Execution Steps</label>
+          <div class="field-example" id="ex-wf" onclick="useExample('f-workflow','ex-wf')"></div>
+          <textarea class="form-textarea" id="f-workflow" style="min-height:72px"></textarea>
+        </div>
+        <div class="field">
+          <label class="field-label" id="l-rules">Decision Rules (If → Then)</label>
+          <div class="field-example" id="ex-rules" onclick="useExample('f-rules','ex-rules')"></div>
+          <textarea class="form-textarea" id="f-rules"></textarea>
+        </div>
+      </div>
+
+      <div class="sep"></div>
+
+      <div class="sb-section">
+        <div class="sb-head"><div class="sb-num">3</div><div class="sb-title" id="s3-title">Roles, KPIs & Backup</div></div>
+        <div class="field">
+          <label class="field-label" id="l-roles">Roles & Responsibilities</label>
+          <div class="field-example" id="ex-roles" onclick="useExample('f-roles','ex-roles')"></div>
+          <textarea class="form-textarea" id="f-roles"></textarea>
+        </div>
+        <div class="field">
+          <label class="field-label" id="l-kpi">KPIs — Performance Indicators</label>
+          <div class="field-example" id="ex-kpi" onclick="useExample('f-kpis','ex-kpi')"></div>
+          <textarea class="form-textarea" id="f-kpis"></textarea>
+        </div>
+        <div class="field">
+          <label class="field-label" id="l-backup">Fail-Safe & Backup Plan</label>
+          <div class="field-example" id="ex-backup" onclick="useExample('f-backup','ex-backup')"></div>
+          <textarea class="form-textarea" id="f-backup"></textarea>
+        </div>
+      </div>
+
+      <div class="sep"></div>
+
+      <div class="sb-section">
+        <div class="sb-head"><div class="sb-num">✓</div><div class="sb-title" id="s4-title">Executive Checklist</div></div>
+        <label class="chk-item"><input type="checkbox" class="chk" data-i="0"><span id="ck0">Objective is clear & measurable</span></label>
+        <label class="chk-item"><input type="checkbox" class="chk" data-i="1"><span id="ck1">Workflow is simple & documented</span></label>
+        <label class="chk-item"><input type="checkbox" class="chk" data-i="2"><span id="ck2">Decision rules are written</span></label>
+        <label class="chk-item"><input type="checkbox" class="chk" data-i="3"><span id="ck3">KPIs are specific & measurable</span></label>
+        <label class="chk-item"><input type="checkbox" class="chk" data-i="4"><span id="ck4">Backup plan exists</span></label>
+        <label class="chk-item"><input type="checkbox" class="chk" data-i="5"><span id="ck5">Not single-person dependent</span></label>
+      </div>
+
+      <div class="sep"></div>
+
+      <div class="sb-section">
+        <div class="ai-box">
+          <div class="ai-box-head"><span class="bounce">✨</span><span id="ai-head-txt">AI Enhancement Engine</span></div>
+          <div class="ai-lang-row">
+            <span class="ai-lang-label" id="ai-lang-label">Output Language</span>
+            <div class="ai-lang-btns">
+              <button class="ai-lang-btn" id="ai-lang-ar" onclick="setAiLang('ar')">🇸🇦 Arabic</button>
+              <button class="ai-lang-btn active" id="ai-lang-en" onclick="setAiLang('en')">🇬🇧 English</button>
+            </div>
+          </div>
+          <button class="enhance-btn" id="enhance-btn" onclick="enhanceWithAI()">
+            <span>✨</span><span id="enhance-txt">Enhance & Refine with AI</span>
+          </button>
+          <p class="ai-note" id="ai-note-txt">AI analyzes your raw input and rewrites it with professional clarity, measurable targets, and consistent structure.</p>
+        </div>
+
+        <button class="gen-btn" onclick="generateDoc()">
+          <span>⚡</span><span id="gen-btn-txt">Generate Document</span>
+        </button>
+        <div class="action-row">
+          <button class="action-btn" onclick="saveSystem()">💾 <span id="btn-save">Save</span></button>
+          <button class="action-btn" onclick="showSaved()">📂 <span id="btn-saved">Saved</span></button>
+        </div>
+        <div id="saved-list" style="display:none"></div>
+      </div>
+
+    </div><!-- /sidebar -->
+
+    <!-- PREVIEW -->
+    <div class="preview-area">
+      <div class="preview-bar">
+        <div class="preview-label" id="prev-label">Document Preview</div>
+        <div class="preview-actions">
+          <button class="exp-btn" onclick="window.print()">🖨️ <span id="btn-print">Print</span></button>
+          <button class="exp-btn primary" onclick="exportPDF()">📄 <span id="btn-pdf">Export PDF</span></button>
+        </div>
+      </div>
+      <div class="paper-wrap">
+        <div id="a4-doc" data-lang="en">
+          <div class="doc-placeholder" id="doc-ph">
+            <div class="doc-ph-icon">📋</div>
+            <div class="doc-ph-title" id="ph-title">Start filling the form</div>
+            <p class="doc-ph-sub" id="ph-sub">Fill in the details on the left, then click Generate to build your executive system document.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CREDS={u:'admin',p:'&Q9mW7!aZ3#Dxv2L$$ICO'};
+let lang='en',dark=false,generated=false,aiLang='en';
+
+/* ── LOGIN ── */
+function doLogin(){
+  const u=document.getElementById('inp-user').value.trim();
+  const p=document.getElementById('inp-pass').value;
+  if(u===CREDS.u&&p===CREDS.p){
+    const ls=document.getElementById('login-screen');
+    ls.classList.add('hidden');
+    setTimeout(()=>{ls.style.display='none';document.getElementById('app').classList.add('visible')},500);
+  } else {
+    const e=document.getElementById('login-error');
+    e.style.display='block';
+    document.getElementById('inp-pass').value='';
+    document.getElementById('inp-pass').focus();
+  }
+}
+document.getElementById('inp-pass').onkeypress=e=>{if(e.key==='Enter')doLogin()};
+document.getElementById('inp-user').onkeypress=e=>{if(e.key==='Enter')document.getElementById('inp-pass').focus()};
+function logout(){
+  document.getElementById('app').classList.remove('visible');
+  const ls=document.getElementById('login-screen');ls.style.display='flex';ls.classList.remove('hidden');
+  document.getElementById('inp-user').value='';document.getElementById('inp-pass').value='';generated=false;
+}
+
+/* ── DARK MODE ── */
+function toggleDark(){
+  dark=!dark;document.documentElement.toggleAttribute('data-dark',dark);
+  document.getElementById('dark-btn').textContent=dark?'☀️':'🌙';
+}
+
+/* ── TRANSLATIONS ── */
+const TR={
+  en:{
+    'tb-name':'Executive System Builder',
+    's1-title':'Foundation & Objective','s2-title':'Workflow & Decision Rules',
+    's3-title':'Roles, KPIs & Backup','s4-title':'Executive Checklist',
+    'l-name':'System Name','l-company':'Company / Department',
+    'l-sit':'Current Situation / Problem','l-obj':'Measurable Objective',
+    'l-wf':'Workflow / Execution Steps','l-rules':'Decision Rules (If → Then)',
+    'l-roles':'Roles & Responsibilities','l-kpi':'KPIs — Performance Indicators',
+    'l-backup':'Fail-Safe & Backup Plan',
+    'ai-head-txt':'AI Enhancement Engine','ai-lang-label':'Output Language',
+    'ai-note-txt':'AI analyzes your raw input and rewrites it with professional clarity, measurable targets, and consistent structure.',
+    'enhance-txt':'Enhance & Refine with AI','gen-btn-txt':'Generate Document',
+    'btn-save':'Save','btn-saved':'Saved','btn-print':'Print','btn-pdf':'Export PDF',
+    'prev-label':'Document Preview','tb-logout':'Logout',
+    'ph-title':'Start filling the form','ph-sub':'Fill in the details on the left, then click Generate to build your executive system document.',
+    'ck0':'Objective is clear & measurable','ck1':'Workflow is simple & documented',
+    'ck2':'Decision rules are written','ck3':'KPIs are specific & measurable',
+    'ck4':'Backup plan exists','ck5':'Not single-person dependent',
+    'golden':'Strong System = Clarity + Rules + Ownership + Metrics + Backup',
+    'golden-sub':"What isn't measured, doesn't improve.",
+    'doc-subtitle':'Executive System Design Document',
+    'doc-badge':'RA',
+    'EX_name':'Customer Complaint Resolution System',
+    'EX_company':'Operations Dept. — Al-Nahda Group',
+    'EX_sit':'Customer complaints take 24–48 hrs to resolve. No clear ownership — responses vary by agent, and ~30% of cases are unnecessarily escalated to management.',
+    'EX_obj':'Resolve 95% of complaints within 4 hours. Reduce escalation rate by 60%. Achieve CSAT score ≥ 4.2/5 within 90 days.',
+    'EX_wf':'1. Complaint received (email / phone / portal)\n2. Auto-tagged by category within 15 min (SLA)\n3. Assigned to responsible agent\n4. Agent reviews & responds\n5. If unresolved after 4 hrs → escalate to Supervisor\n6. Resolution logged & customer notified',
+    'EX_rules':'If data complete → resolve directly (max 4 hrs)\nIf data missing → return to customer within 15 min\nIf complaint > 8 hrs unresolved → auto-escalate to Supervisor\nIf customer dissatisfied after resolution → flag for Quality review',
+    'EX_roles':'Agent: First response & full case ownership\nSupervisor: Handles escalations & quality spot-checks\nTeam Lead: Reviews daily KPIs & coaches agents\nQA Team: Monthly audit — 10% random case sample',
+    'EX_kpi':'• First Response Time: ≤ 30 min (target: 95% of cases)\n• Resolution Time: ≤ 4 hrs (target: 95% of cases)\n• Escalation Rate: ≤ 10%\n• CSAT Score: ≥ 4.2 / 5.0\n• Reopen Rate: ≤ 3%\n• Measured: Weekly dashboard review',
+    'EX_backup':'If primary agent absent → Supervisor reassigns to available agent within 30 min\nIf system is down → switch to manual log sheet; sync within 2 hrs of recovery\nIf volume surges >2× normal → activate on-call backup team roster immediately',
+    'EX_hint':'Click to use this example',
+    'toast-gen':'⚡ Document generated!','toast-save':'💾 Saved!',
+    'toast-ai':'✨ AI enhancement complete!','toast-ai-err':'❌ AI error — please try again.',
+    'toast-no-content':'⚠️ Please fill in some content first.',
+    'toast-no-gen':'⚠️ Generate the document first.',
+    'toast-del':'🗑️ Deleted','toast-no-saves':'No saved systems yet.','toast-loaded':'📂 Loaded!',
+    'ai-load-title':'✨ AI is working...','ai-load-sub':'Analyzing structure · Refining clarity · Filling gaps · Ensuring consistency',
+    'ai-s1':'Analyzing your input','ai-s2':'Refining & structuring','ai-s3':'Building the document',
+    'ai-badge':'✨ AI Enhanced',
+  },
+  ar:{
+    'tb-name':'منشئ النظام التنفيذي',
+    's1-title':'الأساس والهدف','s2-title':'Workflow وقواعد القرار',
+    's3-title':'المسؤوليات والـ KPIs والـ Backup','s4-title':'Executive Checklist',
+    'l-name':'اسم السيستم','l-company':'الشركة / القسم',
+    'l-sit':'الوضع الحالي / المشكلة','l-obj':'الهدف القابل للقياس',
+    'l-wf':'Workflow / خطوات التنفيذ','l-rules':'قواعد القرار (If → Then)',
+    'l-roles':'Roles & Responsibilities','l-kpi':'KPIs — مؤشرات الأداء',
+    'l-backup':'Fail-Safe & Backup Plan',
+    'ai-head-txt':'محرك التحسين بالذكاء الاصطناعي','ai-lang-label':'لغة الناتج',
+    'ai-note-txt':'الـ AI يحلل المحتوى الخام ويعيد صياغته باحترافية مع أهداف قابلة للقياس وتنسيق متسق.',
+    'enhance-txt':'تحسين وصياغة بالـ AI','gen-btn-txt':'توليد الوثيقة',
+    'btn-save':'حفظ','btn-saved':'محفوظات','btn-print':'طباعة','btn-pdf':'تصدير PDF',
+    'prev-label':'معاينة الوثيقة','tb-logout':'خروج',
+    'ph-title':'ابدأ بملء البيانات','ph-sub':'اكتب تفاصيل السيستم في الجانب ثم اضغط توليد لبناء وثيقتك التنفيذية.',
+    'ck0':'الهدف واضح وقابل للقياس','ck1':'Workflow بسيط وموثق',
+    'ck2':'قواعد القرار مكتوبة','ck3':'KPIs محددة وقابلة للقياس',
+    'ck4':'Backup Plan موجود','ck5':'النظام لا يعتمد على شخص واحد',
+    'golden':'نظام قوي = وضوح + قواعد + مسؤوليات + قياس + Backup',
+    'golden-sub':'أي شيء لا يُقاس لا يتطور.',
+    'doc-subtitle':'وثيقة تصميم النظام التنفيذي',
+    'doc-badge':'RA',
+    'EX_name':'نظام معالجة شكاوى العملاء',
+    'EX_company':'إدارة العمليات — مجموعة النهضة',
+    'EX_sit':'تأخر الرد على شكاوى العملاء من 24 إلى 48 ساعة. لا توجد مسؤولية واضحة، والردود تختلف بين الموظفين، وحوالي 30% من الحالات تُرفع للإدارة دون داعٍ.',
+    'EX_obj':'حل 95% من الشكاوى خلال 4 ساعات. تقليل معدل التصعيد بنسبة 60%. تحقيق CSAT ≥ 4.2/5 خلال 90 يومًا.',
+    'EX_wf':'1. استقبال الشكوى (إيميل / هاتف / بوابة)\n2. تصنيف تلقائي خلال 15 دقيقة (SLA)\n3. إسناد للموظف المسؤول\n4. مراجعة والرد من الموظف\n5. إذا لم يُحل خلال 4 ساعات → تصعيد للمشرف\n6. تسجيل الحل وإبلاغ العميل',
+    'EX_rules':'إذا البيانات مكتملة → حل مباشر (أقصاه 4 ساعات)\nإذا البيانات ناقصة → إعادة للعميل خلال 15 دقيقة\nإذا تجاوزت الشكوى 8 ساعات → تصعيد تلقائي للمشرف\nإذا كان العميل غير راضٍ بعد الحل → إحالة لمراجعة الجودة',
+    'EX_roles':'الموظف: الرد الأول والمسؤولية الكاملة عن القضية\nالمشرف: التعامل مع التصعيد ومراجعة الجودة\nقائد الفريق: مراجعة KPIs اليومية وتدريب الفريق\nفريق الجودة: تدقيق شهري — 10% عينة عشوائية',
+    'EX_kpi':'• وقت الرد الأول: ≤ 30 دقيقة (هدف: 95% من الحالات)\n• وقت الحل الكامل: ≤ 4 ساعات (هدف: 95%)\n• معدل التصعيد: ≤ 10%\n• CSAT: ≥ 4.2 / 5.0\n• معدل إعادة الفتح: ≤ 3%\n• القياس: مراجعة أسبوعية عبر Dashboard',
+    'EX_backup':'إذا الموظف الأساسي غائب → المشرف يُسند للموظف التالي خلال 30 دقيقة\nإذا النظام معطل → التحول لسجل يدوي ومزامنة خلال ساعتين من الاسترداد\nإذا تضاعف حجم الطلبات ×2 → تفعيل قائمة الفريق الاحتياطي فورًا',
+    'EX_hint':'انقر لاستخدام هذا المثال',
+    'toast-gen':'⚡ تم توليد الوثيقة!','toast-save':'💾 تم الحفظ!',
+    'toast-ai':'✨ تم التحسين بالـ AI!','toast-ai-err':'❌ خطأ في الـ AI — حاول تاني.',
+    'toast-no-content':'⚠️ اكتب محتوى الأول.',
+    'toast-no-gen':'⚠️ ولّد الوثيقة الأول.',
+    'toast-del':'🗑️ تم الحذف','toast-no-saves':'لا يوجد محفوظات بعد.','toast-loaded':'📂 تم التحميل!',
+    'ai-load-title':'✨ الـ AI شغّال...','ai-load-sub':'تحليل الهيكل · تحسين الوضوح · تكميل الفراغات · ضمان الاتساق',
+    'ai-s1':'تحليل المحتوى المُدخل','ai-s2':'صياغة وهيكلة احترافية','ai-s3':'بناء الوثيقة النهائية',
+    'ai-badge':'✨ محسَّن بـ AI',
+  }
+};
+function t(k){return(TR[lang]||TR.en)[k]||k}
+
+/* ── LANG SWITCH ── */
+const TEXT_IDS=['tb-name','s1-title','s2-title','s3-title','s4-title','l-name','l-company','l-sit','l-obj','l-wf','l-rules','l-roles','l-kpi','l-backup','ai-head-txt','ai-lang-label','ai-note-txt','enhance-txt','gen-btn-txt','btn-save','btn-saved','btn-print','btn-pdf','prev-label','tb-logout','ph-title','ph-sub'];
+const EX_PAIRS=[['ex-name','EX_name','f-name'],['ex-company','EX_company','f-company'],['ex-sit','EX_sit','f-situation'],['ex-obj','EX_obj','f-objective'],['ex-wf','EX_wf','f-workflow'],['ex-rules','EX_rules','f-rules'],['ex-roles','EX_roles','f-roles'],['ex-kpi','EX_kpi','f-kpis'],['ex-backup','EX_backup','f-backup']];
+
+function switchLang(l){
+  lang=l;
+  document.documentElement.lang=l;
+  document.documentElement.dir=l==='ar'?'rtl':'ltr';
+  document.getElementById('lopt-en').classList.toggle('active',l==='en');
+  document.getElementById('lopt-ar').classList.toggle('active',l==='ar');
+  TEXT_IDS.forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=t(id)});
+  for(let i=0;i<6;i++){const el=document.getElementById('ck'+i);if(el)el.textContent=t('ck'+i)}
+  // rebuild examples
+  EX_PAIRS.forEach(([exId,trKey,fieldId])=>{
+    const el=document.getElementById(exId);
+    if(!el)return;
+    const txt=t(trKey);
+    el.innerHTML='<span class="ex-hint">'+t('EX_hint')+'</span>'+escHtml(txt);
+    el.onclick=()=>useExampleDirect(fieldId,txt);
+  });
+  if(generated)generateDoc();
+}
+
+/* ── EXAMPLE USE ── */
+function useExample(fieldId,exId){
+  useExampleDirect(fieldId,t(EX_PAIRS.find(p=>p[0]===exId)?.[1]||''));
+}
+function useExampleDirect(fieldId,txt){
+  const el=document.getElementById(fieldId);
+  if(!el||!txt)return;
+  el.value=txt;el.focus();
+  el.style.transition='box-shadow .15s';
+  el.style.boxShadow='0 0 0 3px var(--accent-glow)';
+  setTimeout(()=>{el.style.boxShadow=''},700);
+  if(generated)scheduleRegen();
+}
+
+/* ── HELPERS ── */
+function v(id){return document.getElementById(id).value.trim()}
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+/* ── GENERATE ── */
+function generateDoc(){
+  generated=true;
+  const isAr=lang==='ar';
+  const doc=document.getElementById('a4-doc');
+  doc.setAttribute('data-lang',lang);
+  doc.dir=isAr?'rtl':'ltr';
+  doc.style.fontFamily=isAr?"'IBM Plex Sans Arabic',sans-serif":"'Syne','IBM Plex Sans Arabic',sans-serif";
+
+  const name=v('f-name')||(isAr?'بدون اسم':'Untitled System');
+  const company=v('f-company'),sit=v('f-situation'),obj=v('f-objective');
+  const wf=v('f-workflow'),rules=v('f-rules'),roles=v('f-roles');
+  const kpis=v('f-kpis'),backup=v('f-backup');
+
+  const checks=Array.from(document.querySelectorAll('.chk')).map((c,i)=>({label:t('ck'+i),done:c.checked}));
+  const dateStr=new Date().toLocaleDateString(isAr?'ar-EG':'en-GB',{year:'numeric',month:'long',day:'numeric'});
+  const empty=isAr?'— لم يُدخل بعد —':'— Not entered yet —';
+
+  function block(num,title,content,tall,full){
+    const isEmpty=!content;
+    return`<div class="doc-block${full?' doc-full':''}">
+      <div class="doc-block-head"><div class="doc-block-num">${num}</div><div class="doc-block-title">${title}</div></div>
+      <div class="doc-block-body${tall?' tall':''}${isEmpty?' empty':''}">${isEmpty?empty:escHtml(content)}</div>
+    </div>`;
+  }
+
+  const chkHtml=checks.map(c=>`<div class="doc-chk-item"><div class="doc-chk-box${c.done?' done':''}">${c.done?'✓':''}</div><span>${escHtml(c.label)}</span></div>`).join('');
+
+  doc.innerHTML=`
+    <div class="doc-hdr">
+      <div class="doc-hdr-top">
+        <div class="doc-company-name">${company?escHtml(company):'&nbsp;'}</div>
+        <div class="doc-date">${dateStr}</div>
+      </div>
+      <div class="doc-title">${escHtml(name)}</div>
+      <div class="doc-subtitle">
+        <span class="doc-badge" id="doc-esb-badge">${t('doc-badge')}</span>
+        <span>${escHtml(t('doc-subtitle'))}</span>
+      </div>
+    </div>
+    <div class="doc-grid">
+      ${block('1',isAr?'الوضع الحالي':'Current Situation',sit,true)}
+      ${block('2',isAr?'الهدف القابل للقياس':'Measurable Objective',obj,true)}
+    </div>
+    <div class="doc-grid" style="grid-template-columns:1fr">
+      ${block('3',isAr?'Workflow — خطوات التنفيذ':'Workflow — Execution Steps',wf,true,true)}
+    </div>
+    <div class="doc-grid">
+      ${block('4',isAr?'قواعد القرار (If → Then)':'Decision Rules (If → Then)',rules)}
+      ${block('5','Roles & Responsibilities',roles)}
+    </div>
+    <div class="doc-grid">
+      ${block('6',isAr?'KPIs — مؤشرات الأداء':'KPIs — Performance Indicators',kpis)}
+      ${block('7','Fail-Safe & Backup Plan',backup)}
+    </div>
+    <div class="doc-golden">
+      <div class="doc-golden-icon">⚡</div>
+      <div>
+        <div class="doc-golden-text">${escHtml(t('golden'))}</div>
+        <div class="doc-golden-sub">${escHtml(t('golden-sub'))}</div>
+      </div>
+    </div>
+    <div class="doc-block">
+      <div class="doc-block-head"><div class="doc-block-num">✓</div><div class="doc-block-title">Executive Checklist</div></div>
+      <div class="doc-checklist">${chkHtml}</div>
+    </div>
+    <div class="doc-footer">
+      <div class="doc-footer-txt">RA · Executive System Builder</div>
+      <div class="doc-footer-txt">${dateStr}</div>
+    </div>`;
+
+  doc.style.animation='none';doc.offsetHeight;
+  doc.style.animation='fadeUp .4s cubic-bezier(.22,1,.36,1)';
+  showToast(t('toast-gen'));
+}
+
+function exportPDF(){if(!generated){showToast(t('toast-no-gen'));return}window.print()}
+
+let regenT;
+function scheduleRegen(){clearTimeout(regenT);regenT=setTimeout(generateDoc,700)}
+document.querySelectorAll('.form-input,.form-textarea').forEach(el=>{el.addEventListener('input',()=>{if(generated)scheduleRegen()})});
+document.querySelectorAll('.chk').forEach(c=>{c.addEventListener('change',()=>{if(generated)generateDoc()})});
+
+/* ── SAVE/LOAD ── */
+function getSaves(){try{return JSON.parse(localStorage.getItem('esb_v2')||'{}')}catch{return{}}}
+function saveSystem(){
+  const name=v('f-name')||(lang==='ar'?'بدون اسم':'Untitled');
+  const saves=getSaves();
+  saves[Date.now()]={name,lang,situation:v('f-situation'),objective:v('f-objective'),company:v('f-company'),workflow:v('f-workflow'),rules:v('f-rules'),roles:v('f-roles'),kpis:v('f-kpis'),backup:v('f-backup'),checks:Array.from(document.querySelectorAll('.chk')).map(c=>c.checked),savedAt:new Date().toISOString()};
+  localStorage.setItem('esb_v2',JSON.stringify(saves));
+  showToast(t('toast-save'));
+}
+function showSaved(){
+  const list=document.getElementById('saved-list'),saves=getSaves(),keys=Object.keys(saves).reverse();
+  if(list.style.display==='block'){list.style.display='none';return}
+  if(!keys.length){showToast(t('toast-no-saves'));return}
+  list.style.display='block';
+  list.innerHTML=keys.map(k=>{const s=saves[k];const d=new Date(s.savedAt).toLocaleDateString();return`<div class="saved-item" onclick="loadSystem('${k}')"><div><div class="saved-item-name">${escHtml(s.name)}</div><div class="saved-item-date">${d}</div></div><button class="saved-del" onclick="event.stopPropagation();deleteSystem('${k}')">✕</button></div>`}).join('');
+}
+function loadSystem(key){
+  const s=getSaves()[key];if(!s)return;
+  ['name','company','situation','objective','workflow','rules','roles','kpis','backup'].forEach(f=>{const el=document.getElementById('f-'+f);if(el)el.value=s[f]||''});
+  document.querySelectorAll('.chk').forEach((c,i)=>{if(s.checks)c.checked=s.checks[i]||false});
+  if(s.lang&&s.lang!==lang)switchLang(s.lang);
+  document.getElementById('saved-list').style.display='none';
+  generateDoc();showToast(t('toast-loaded'));
+}
+function deleteSystem(key){const saves=getSaves();delete saves[key];localStorage.setItem('esb_v2',JSON.stringify(saves));showSaved();showToast(t('toast-del'))}
+
+/* ── AI ── */
+function setAiLang(l){aiLang=l;document.getElementById('ai-lang-ar').classList.toggle('active',l==='ar');document.getElementById('ai-lang-en').classList.toggle('active',l==='en')}
+
+let stepIv;
+function showAiOverlay(show){
+  const ex=document.getElementById('ai-overlay');
+  if(show){
+    if(ex)return;
+    const ov=document.createElement('div');ov.className='ai-overlay';ov.id='ai-overlay';
+    ov.innerHTML=`<div class="ai-overlay-card">
+      <div class="ai-spinner"></div>
+      <div class="ai-overlay-title">${t('ai-load-title')}</div>
+      <div class="ai-overlay-sub">${t('ai-load-sub')}</div>
+      <div class="ai-steps">
+        <div class="ai-step active" id="as0"><div class="ai-step-dot"></div>${t('ai-s1')}</div>
+        <div class="ai-step" id="as1"><div class="ai-step-dot"></div>${t('ai-s2')}</div>
+        <div class="ai-step" id="as2"><div class="ai-step-dot"></div>${t('ai-s3')}</div>
+      </div>
+    </div>`;
+    document.body.appendChild(ov);
+    document.getElementById('enhance-btn').disabled=true;
+    let s=0;
+    stepIv=setInterval(()=>{
+      [0,1,2].forEach(i=>document.getElementById('as'+i)?.classList.toggle('active',i===s));
+      s=(s+1)%3;
+    },1100);
+  } else {
+    clearInterval(stepIv);if(ex)ex.remove();
+    document.getElementById('enhance-btn').disabled=false;
+  }
+}
+
+async function enhanceWithAI(){
+  const vals=['f-name','f-company','f-situation','f-objective','f-workflow','f-rules','f-roles','f-kpis','f-backup'].map(f=>v(f));
+  if(!vals.some(x=>x.length)){showToast(t('toast-no-content'));return}
+  showAiOverlay(true);
+  const langInstr=aiLang==='ar'
+    ?'CRITICAL: Write your ENTIRE response in Arabic (Modern Standard Arabic — فصحى). Every word must be in Arabic. Use professional business Arabic.'
+    :'CRITICAL: Write your ENTIRE response in English. Use professional executive business English.';
+  const prompt=`You are a world-class executive system designer and operations consultant.
+
+The user has provided raw notes for an operational system. Your mission:
+1. DEEPLY understand the business context and intent
+2. Professionally rewrite every section to executive standard
+3. Make everything SPECIFIC, MEASURABLE, and ACTIONABLE — no vague language allowed
+4. Fill empty fields with intelligent suggestions based on context from other fields
+5. Ensure total logical consistency across all sections
+6. ${langInstr}
+
+USER INPUT:
+━━━━━━━━━━━━━━━━━━━━━━━
+System Name: ${v('f-name')||'(not provided)'}
+Company/Dept: ${v('f-company')||'(not provided)'}
+Current Problem: ${v('f-situation')||'(not provided)'}
+Goal/Objective: ${v('f-objective')||'(not provided)'}
+Workflow Steps: ${v('f-workflow')||'(not provided)'}
+Decision Rules: ${v('f-rules')||'(not provided)'}
+Roles: ${v('f-roles')||'(not provided)'}
+KPIs: ${v('f-kpis')||'(not provided)'}
+Backup Plan: ${v('f-backup')||'(not provided)'}
+━━━━━━━━━━━━━━━━━━━━━━━
+
+QUALITY STANDARDS:
+• name → Formal professional system name (4–7 words)
+• company → Clean department/company identifier
+• situation → 2–3 sentences with quantified pain points (use numbers/%)
+• objective → 2–3 SMART goals with specific numbers, %, timeframes
+• workflow → Numbered steps "1. ... → 2. ..." with timing and handoffs
+• rules → "If [specific condition] → Then [action + timeframe]" — 4–5 rules
+• roles → "Role Title: Responsibility (ownership note)" — one per line
+• kpis → Bullet list: metric name, target value, measurement frequency
+• backup → "If [scenario] → Then [contingency]" — 3 specific scenarios
+
+Return ONLY a valid compact JSON, no markdown, no explanation:
+{"name":"...","company":"...","situation":"...","objective":"...","workflow":"...","rules":"...","roles":"...","kpis":"...","backup":"..."}`;
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+    const data=await res.json();
+    const text=data.content.map(b=>b.text||'').join('');
+    const parsed=JSON.parse(text.replace(/```json|```/g,'').trim());
+    ['name','company','situation','objective','workflow','rules','roles','kpis','backup'].forEach(f=>{
+      const el=document.getElementById('f-'+f);if(el&&parsed[f])el.value=parsed[f];
+    });
+    if(aiLang!==lang)switchLang(aiLang);
+    showAiOverlay(false);generated=true;generateDoc();
+    // inject AI badge
+    const sub=document.querySelector('#a4-doc .doc-subtitle');
+    if(sub&&!sub.querySelector('.ai-badge')){
+      const b=document.createElement('span');b.className='doc-badge ai-badge';b.textContent=t('ai-badge');sub.appendChild(b);
+    }
+    showToast(t('toast-ai'));
+  }catch(err){
+    showAiOverlay(false);console.error(err);showToast(t('toast-ai-err'));
+  }
+}
+
+/* ── TOAST ── */
+let toastT;
+function showToast(msg){
+  const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+/* ── INIT ── */
+switchLang('en');
+</script>
+</body>
+</html>
