@@ -52,7 +52,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .login-bg-orb:nth-child(2){width:350px;height:350px;background:radial-gradient(circle,rgba(200,120,10,.22),transparent 70%);bottom:-80px;left:-60px;animation-delay:-3s}
 .login-bg-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:40px 40px}
 
-/* Brutalist card wrapper */
 .login-wrapper{
   position:relative;z-index:1;
   display:flex;flex-direction:column;align-items:center;gap:22px;
@@ -120,21 +119,18 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   transition:all 0.3s cubic-bezier(0.68,-0.55,0.265,1.55);
 }
 .login-submit:hover{transform:translate(2px,2px);box-shadow:2px 2px 0 rgba(255,255,255,.3);background:#222}
-/* Glitch sweep */
 .login-card::before{
   content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
   background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);
   transition:left 0.7s cubic-bezier(0.25,0.46,0.45,0.94);
 }
 .login-card:hover::before{left:100%}
-/* Corner accent */
 .login-card::after{
   content:'';position:absolute;top:-4px;right:-4px;width:20px;height:20px;
   background:#000;clip-path:polygon(0 0,100% 0,100% 100%);
   transition:all 0.6s ease;
 }
 .login-card:hover::after{transform:scale(1) rotate(0deg);background:rgb(246,168,116)}
-/* Pulse ring */
 .login-container::before{
   content:'';position:absolute;top:50%;left:50%;width:0;height:0;
   background:rgba(255,51,102,.1);border-radius:50%;
@@ -148,6 +144,40 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   border:2px solid #ff3366;letter-spacing:.03em;
   font-family:var(--mono);max-width:260px;
 }
+
+/* API KEY MODAL */
+.api-modal{
+  position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);
+  display:flex;align-items:center;justify-content:center;z-index:9998;
+  animation:fadeIn .25s ease;
+}
+.api-modal-card{
+  background:var(--surface);border-radius:16px;padding:32px 28px;
+  max-width:420px;width:90%;box-shadow:var(--shadow-lg);
+  animation:scaleIn .3s cubic-bezier(.22,1,.36,1);
+}
+.api-modal-title{font-size:18px;font-weight:800;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.api-modal-sub{font-size:12px;color:var(--text2);margin-bottom:18px;line-height:1.6}
+.api-modal-input{
+  width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:9px;
+  background:var(--input-bg);color:var(--text);font-family:var(--mono);font-size:12px;
+  outline:none;margin-bottom:12px;transition:border-color .2s,box-shadow .2s;
+}
+.api-modal-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+.api-modal-note{font-size:10px;color:var(--text2);margin-bottom:18px;line-height:1.6;padding:8px 12px;background:var(--surface2);border-radius:7px;border-inline-start:3px solid var(--accent)}
+.api-modal-btns{display:flex;gap:8px}
+.api-modal-confirm{
+  flex:1;padding:11px;background:var(--accent);color:#fff;border:none;border-radius:9px;
+  font-family:var(--font);font-size:13px;font-weight:800;cursor:pointer;
+  transition:filter .15s,transform .15s;
+}
+.api-modal-confirm:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.api-modal-cancel{
+  padding:11px 18px;border:1.5px solid var(--border);border-radius:9px;
+  background:var(--surface2);color:var(--text2);font-family:var(--font);font-size:13px;font-weight:700;
+  cursor:pointer;transition:all .18s;
+}
+.api-modal-cancel:hover{border-color:var(--accent);color:var(--accent)}
 
 /* APP */
 #app{display:none;min-height:100vh}
@@ -173,7 +203,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .topbar-ver{font-size:10px;color:var(--text2);font-family:var(--mono)}
 .topbar-right{display:flex;align-items:center;gap:6px}
 
-/* Language pill — improved */
 .lang-pill{
   display:flex;align-items:center;
   background:var(--surface2);border:1px solid var(--border);
@@ -212,6 +241,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .tb-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
 .tb-btn svg{width:14px;height:14px;flex-shrink:0}
 
+/* API Key button in topbar */
+.api-key-btn{
+  height:34px;padding:0 12px;border-radius:8px;border:1px dashed var(--accent);
+  background:var(--accent-light);color:var(--accent);font-family:var(--font);
+  font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:5px;
+  transition:all .18s;
+}
+.api-key-btn:hover{background:var(--accent);color:#fff}
+.api-key-btn.set{border-style:solid;background:var(--green-light);border-color:var(--green);color:var(--green)}
+
 /* LAYOUT */
 .layout{display:grid;grid-template-columns:340px 1fr;min-height:calc(100vh - var(--topbar-h))}
 
@@ -246,7 +285,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   margin-bottom:4px;letter-spacing:.05em;text-transform:uppercase;
 }
 
-/* Smart example — richer design */
 .field-example{
   font-size:10.5px;color:var(--text);line-height:1.6;
   padding:8px 11px 7px;
@@ -505,6 +543,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       </div>
     </div>
     <div class="topbar-right">
+      <button class="api-key-btn" id="api-key-btn" onclick="openApiModal()">🔑 <span id="api-key-btn-txt">Set API Key</span></button>
       <div class="lang-pill">
         <button class="lang-opt active" id="lopt-en" onclick="switchLang('en')">
           <span class="flag">🇬🇧</span> EN
@@ -650,11 +689,56 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   </div>
 </div>
 
+<!-- API KEY MODAL -->
+<div class="api-modal" id="api-modal" style="display:none">
+  <div class="api-modal-card">
+    <div class="api-modal-title">🔑 <span id="api-modal-title-txt">Anthropic API Key</span></div>
+    <p class="api-modal-sub" id="api-modal-sub-txt">Enter your Anthropic API key to enable the AI Enhancement feature. Your key is stored only in your browser's localStorage.</p>
+    <input class="api-modal-input" type="password" id="api-key-input" placeholder="sk-ant-api03-..." autocomplete="off">
+    <div class="api-modal-note" id="api-modal-note-txt">🔒 Your API key is never sent to any server except Anthropic's API directly. It stays in your browser only.</div>
+    <div class="api-modal-btns">
+      <button class="api-modal-confirm" onclick="saveApiKey()" id="api-modal-confirm-txt">Save Key</button>
+      <button class="api-modal-cancel" onclick="closeApiModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
 const CREDS={u:'admin',p:'&Q9mW7!aZ3#Dxv2L$$ICO'};
 let lang='en',dark=false,generated=false,aiLang='en';
+
+/* ── API KEY MANAGEMENT ── */
+function getApiKey(){return localStorage.getItem('esb_apikey')||''}
+function saveApiKey(){
+  const k=document.getElementById('api-key-input').value.trim();
+  if(!k){showToast('⚠️ Please enter a key');return}
+  if(!k.startsWith('sk-ant')){showToast('⚠️ Invalid key format');return}
+  localStorage.setItem('esb_apikey',k);
+  closeApiModal();
+  updateApiKeyBtn();
+  showToast(lang==='ar'?'🔑 تم حفظ الـ API Key!':'🔑 API Key saved!');
+}
+function openApiModal(){
+  document.getElementById('api-modal').style.display='flex';
+  const k=getApiKey();
+  document.getElementById('api-key-input').value=k||'';
+  document.getElementById('api-key-input').focus();
+}
+function closeApiModal(){document.getElementById('api-modal').style.display='none'}
+function updateApiKeyBtn(){
+  const btn=document.getElementById('api-key-btn');
+  const txt=document.getElementById('api-key-btn-txt');
+  if(getApiKey()){
+    btn.classList.add('set');
+    txt.textContent=lang==='ar'?'✓ API Key محفوظ':'✓ Key Set';
+  } else {
+    btn.classList.remove('set');
+    txt.textContent=lang==='ar'?'🔑 API Key':'🔑 Set API Key';
+  }
+}
+document.getElementById('api-modal').addEventListener('click',function(e){if(e.target===this)closeApiModal()});
 
 /* ── LOGIN ── */
 function doLogin(){
@@ -663,7 +747,7 @@ function doLogin(){
   if(u===CREDS.u&&p===CREDS.p){
     const ls=document.getElementById('login-screen');
     ls.classList.add('hidden');
-    setTimeout(()=>{ls.style.display='none';document.getElementById('app').classList.add('visible')},500);
+    setTimeout(()=>{ls.style.display='none';document.getElementById('app').classList.add('visible');updateApiKeyBtn()},500);
   } else {
     const e=document.getElementById('login-error');
     e.style.display='block';
@@ -720,13 +804,19 @@ const TR={
     'EX_backup':'If primary agent absent → Supervisor reassigns to available agent within 30 min\nIf system is down → switch to manual log sheet; sync within 2 hrs of recovery\nIf volume surges >2× normal → activate on-call backup team roster immediately',
     'EX_hint':'Click to use this example',
     'toast-gen':'⚡ Document generated!','toast-save':'💾 Saved!',
-    'toast-ai':'✨ AI enhancement complete!','toast-ai-err':'❌ AI error — please try again.',
+    'toast-ai':'✨ AI enhancement complete!','toast-ai-err':'❌ AI error — check your API key.',
     'toast-no-content':'⚠️ Please fill in some content first.',
     'toast-no-gen':'⚠️ Generate the document first.',
     'toast-del':'🗑️ Deleted','toast-no-saves':'No saved systems yet.','toast-loaded':'📂 Loaded!',
+    'toast-no-key':'🔑 Set your API key first!',
     'ai-load-title':'✨ AI is working...','ai-load-sub':'Analyzing structure · Refining clarity · Filling gaps · Ensuring consistency',
     'ai-s1':'Analyzing your input','ai-s2':'Refining & structuring','ai-s3':'Building the document',
     'ai-badge':'✨ AI Enhanced',
+    'api-modal-title':'Anthropic API Key',
+    'api-modal-sub':'Enter your Anthropic API key to enable AI Enhancement. Stored only in your browser.',
+    'api-modal-note':'🔒 Your key is never sent anywhere except Anthropic\'s API directly from your browser.',
+    'api-modal-confirm':'Save Key',
+    'api-key-btn-txt':'Set API Key','api-key-set-txt':'✓ Key Set',
   },
   ar:{
     'tb-name':'منشئ النظام التنفيذي',
@@ -761,13 +851,19 @@ const TR={
     'EX_backup':'إذا الموظف الأساسي غائب → المشرف يُسند للموظف التالي خلال 30 دقيقة\nإذا النظام معطل → التحول لسجل يدوي ومزامنة خلال ساعتين من الاسترداد\nإذا تضاعف حجم الطلبات ×2 → تفعيل قائمة الفريق الاحتياطي فورًا',
     'EX_hint':'انقر لاستخدام هذا المثال',
     'toast-gen':'⚡ تم توليد الوثيقة!','toast-save':'💾 تم الحفظ!',
-    'toast-ai':'✨ تم التحسين بالـ AI!','toast-ai-err':'❌ خطأ في الـ AI — حاول تاني.',
+    'toast-ai':'✨ تم التحسين بالـ AI!','toast-ai-err':'❌ خطأ في الـ AI — تحقق من الـ API Key.',
     'toast-no-content':'⚠️ اكتب محتوى الأول.',
     'toast-no-gen':'⚠️ ولّد الوثيقة الأول.',
     'toast-del':'🗑️ تم الحذف','toast-no-saves':'لا يوجد محفوظات بعد.','toast-loaded':'📂 تم التحميل!',
+    'toast-no-key':'🔑 ضع الـ API Key الأول!',
     'ai-load-title':'✨ الـ AI شغّال...','ai-load-sub':'تحليل الهيكل · تحسين الوضوح · تكميل الفراغات · ضمان الاتساق',
     'ai-s1':'تحليل المحتوى المُدخل','ai-s2':'صياغة وهيكلة احترافية','ai-s3':'بناء الوثيقة النهائية',
     'ai-badge':'✨ محسَّن بـ AI',
+    'api-modal-title':'مفتاح Anthropic API',
+    'api-modal-sub':'أدخل مفتاح الـ API الخاص بك لتفعيل ميزة تحسين الـ AI. يُحفظ فقط في متصفحك.',
+    'api-modal-note':'🔒 مفتاحك لا يُرسل لأي مكان غير Anthropic API مباشرة من متصفحك.',
+    'api-modal-confirm':'حفظ المفتاح',
+    'api-key-btn-txt':'🔑 API Key','api-key-set-txt':'✓ API Key محفوظ',
   }
 };
 function t(k){return(TR[lang]||TR.en)[k]||k}
@@ -784,7 +880,18 @@ function switchLang(l){
   document.getElementById('lopt-ar').classList.toggle('active',l==='ar');
   TEXT_IDS.forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=t(id)});
   for(let i=0;i<6;i++){const el=document.getElementById('ck'+i);if(el)el.textContent=t('ck'+i)}
-  // rebuild examples
+  // update API modal texts
+  ['api-modal-title-txt','api-modal-sub-txt','api-modal-note-txt','api-modal-confirm-txt'].forEach(id=>{
+    const el=document.getElementById(id);
+    const key=id.replace('-txt','').replace('api-modal-','api-modal-');
+    if(el){
+      if(id==='api-modal-title-txt')el.textContent=t('api-modal-title');
+      else if(id==='api-modal-sub-txt')el.textContent=t('api-modal-sub');
+      else if(id==='api-modal-note-txt')el.textContent=t('api-modal-note');
+      else if(id==='api-modal-confirm-txt')el.textContent=t('api-modal-confirm');
+    }
+  });
+  updateApiKeyBtn();
   EX_PAIRS.forEach(([exId,trKey,fieldId])=>{
     const el=document.getElementById(exId);
     if(!el)return;
@@ -955,6 +1062,8 @@ function showAiOverlay(show){
 }
 
 async function enhanceWithAI(){
+  const apiKey=getApiKey();
+  if(!apiKey){showToast(t('toast-no-key'));openApiModal();return}
   const vals=['f-name','f-company','f-situation','f-objective','f-workflow','f-rules','f-roles','f-kpis','f-backup'].map(f=>v(f));
   if(!vals.some(x=>x.length)){showToast(t('toast-no-content'));return}
   showAiOverlay(true);
@@ -999,8 +1108,18 @@ Return ONLY a valid compact JSON, no markdown, no explanation:
 {"name":"...","company":"...","situation":"...","objective":"...","workflow":"...","rules":"...","roles":"...","kpis":"...","backup":"..."}`;
 
   try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':apiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+    });
     const data=await res.json();
+    if(data.error){throw new Error(data.error.message)}
     const text=data.content.map(b=>b.text||'').join('');
     const parsed=JSON.parse(text.replace(/```json|```/g,'').trim());
     ['name','company','situation','objective','workflow','rules','roles','kpis','backup'].forEach(f=>{
@@ -1008,7 +1127,6 @@ Return ONLY a valid compact JSON, no markdown, no explanation:
     });
     if(aiLang!==lang)switchLang(aiLang);
     showAiOverlay(false);generated=true;generateDoc();
-    // inject AI badge
     const sub=document.querySelector('#a4-doc .doc-subtitle');
     if(sub&&!sub.querySelector('.ai-badge')){
       const b=document.createElement('span');b.className='doc-badge ai-badge';b.textContent=t('ai-badge');sub.appendChild(b);
