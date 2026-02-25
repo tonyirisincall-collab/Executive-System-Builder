@@ -543,7 +543,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       </div>
     </div>
     <div class="topbar-right">
-      <button class="api-key-btn" id="api-key-btn" onclick="openApiModal()">🔑 <span id="api-key-btn-txt">Set API Key</span></button>
       <div class="lang-pill">
         <button class="lang-opt active" id="lopt-en" onclick="switchLang('en')">
           <span class="flag">🇬🇧</span> EN
@@ -689,16 +688,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   </div>
 </div>
 
-<!-- API KEY MODAL -->
-<div class="api-modal" id="api-modal" style="display:none">
-  <div class="api-modal-card">
-    <div class="api-modal-title">🔑 <span id="api-modal-title-txt">Anthropic API Key</span></div>
-    <p class="api-modal-sub" id="api-modal-sub-txt">Enter your Anthropic API key to enable the AI Enhancement feature. Your key is stored only in your browser's localStorage.</p>
-    <input class="api-modal-input" type="password" id="api-key-input" placeholder="sk-ant-api03-..." autocomplete="off">
-    <div class="api-modal-note" id="api-modal-note-txt">🔒 Your API key is never sent to any server except Anthropic's API directly. It stays in your browser only.</div>
-    <div class="api-modal-btns">
-      <button class="api-modal-confirm" onclick="saveApiKey()" id="api-modal-confirm-txt">Save Key</button>
-      <button class="api-modal-cancel" onclick="closeApiModal()">Cancel</button>
+<!-- AI LOCKED MODAL -->
+<div class="api-modal" id="ai-locked-modal" style="display:none">
+  <div class="api-modal-card" style="text-align:center">
+    <div style="font-size:44px;margin-bottom:14px">✨</div>
+    <div class="api-modal-title" style="justify-content:center;margin-bottom:10px" id="locked-title">AI Enhancement</div>
+    <p class="api-modal-sub" style="text-align:center;margin-bottom:18px" id="locked-sub">This feature is available in the full version.<br>Open the tool directly in Claude to use AI Enhancement.</p>
+    <div class="api-modal-note" style="text-align:center;margin-bottom:18px" id="locked-note">💡 All other features — Generate, Save, Export — work normally here.</div>
+    <div class="api-modal-btns" style="justify-content:center">
+      <button class="api-modal-confirm" onclick="closeLockedModal()" id="locked-btn">Got it!</button>
     </div>
   </div>
 </div>
@@ -709,36 +707,22 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 const CREDS={u:'admin',p:'&Q9mW7!aZ3#Dxv2L$$ICO'};
 let lang='en',dark=false,generated=false,aiLang='en';
 
-/* ── API KEY MANAGEMENT ── */
-function getApiKey(){return localStorage.getItem('esb_apikey')||''}
-function saveApiKey(){
-  const k=document.getElementById('api-key-input').value.trim();
-  if(!k){showToast('⚠️ Please enter a key');return}
-  if(!k.startsWith('sk-ant')){showToast('⚠️ Invalid key format');return}
-  localStorage.setItem('esb_apikey',k);
-  closeApiModal();
-  updateApiKeyBtn();
-  showToast(lang==='ar'?'🔑 تم حفظ الـ API Key!':'🔑 API Key saved!');
+/* ── LOCKED MODAL ── */
+function openLockedModal(){document.getElementById('ai-locked-modal').style.display='flex'}
+function closeLockedModal(){document.getElementById('ai-locked-modal').style.display='none'}
+function updateLockedModal(){
+  const isAr=lang==='ar';
+  document.getElementById('locked-title').textContent=isAr?'تحسين بالـ AI':'AI Enhancement';
+  document.getElementById('locked-sub').innerHTML=isAr
+    ?'هذه الميزة متاحة في النسخة الكاملة.<br>افتح الأداة مباشرة في Claude لاستخدام تحسين الـ AI.'
+    :'This feature is available in the full version.<br>Open the tool directly in Claude to use AI Enhancement.';
+  document.getElementById('locked-note').textContent=isAr
+    ?'💡 كل الميزات الأخرى — توليد، حفظ، تصدير — تعمل بشكل طبيعي هنا.'
+    :'💡 All other features — Generate, Save, Export — work normally here.';
+  document.getElementById('locked-btn').textContent=isAr?'فهمت!':'Got it!';
 }
-function openApiModal(){
-  document.getElementById('api-modal').style.display='flex';
-  const k=getApiKey();
-  document.getElementById('api-key-input').value=k||'';
-  document.getElementById('api-key-input').focus();
-}
-function closeApiModal(){document.getElementById('api-modal').style.display='none'}
-function updateApiKeyBtn(){
-  const btn=document.getElementById('api-key-btn');
-  const txt=document.getElementById('api-key-btn-txt');
-  if(getApiKey()){
-    btn.classList.add('set');
-    txt.textContent=lang==='ar'?'✓ API Key محفوظ':'✓ Key Set';
-  } else {
-    btn.classList.remove('set');
-    txt.textContent=lang==='ar'?'🔑 API Key':'🔑 Set API Key';
-  }
-}
-document.getElementById('api-modal').addEventListener('click',function(e){if(e.target===this)closeApiModal()});
+document.getElementById('ai-locked-modal').addEventListener('click',function(e){if(e.target===this)closeLockedModal()});
+function updateApiKeyBtn(){}
 
 /* ── LOGIN ── */
 function doLogin(){
@@ -747,7 +731,7 @@ function doLogin(){
   if(u===CREDS.u&&p===CREDS.p){
     const ls=document.getElementById('login-screen');
     ls.classList.add('hidden');
-    setTimeout(()=>{ls.style.display='none';document.getElementById('app').classList.add('visible');updateApiKeyBtn()},500);
+    setTimeout(()=>{ls.style.display='none';document.getElementById('app').classList.add('visible')},500);
   } else {
     const e=document.getElementById('login-error');
     e.style.display='block';
@@ -900,6 +884,7 @@ function switchLang(l){
     el.onclick=()=>useExampleDirect(fieldId,txt);
   });
   if(generated)generateDoc();
+  updateLockedModal();
 }
 
 /* ── EXAMPLE USE ── */
@@ -1061,81 +1046,7 @@ function showAiOverlay(show){
   }
 }
 
-async function enhanceWithAI(){
-  const apiKey=getApiKey();
-  if(!apiKey){showToast(t('toast-no-key'));openApiModal();return}
-  const vals=['f-name','f-company','f-situation','f-objective','f-workflow','f-rules','f-roles','f-kpis','f-backup'].map(f=>v(f));
-  if(!vals.some(x=>x.length)){showToast(t('toast-no-content'));return}
-  showAiOverlay(true);
-  const langInstr=aiLang==='ar'
-    ?'CRITICAL: Write your ENTIRE response in Arabic (Modern Standard Arabic — فصحى). Every word must be in Arabic. Use professional business Arabic.'
-    :'CRITICAL: Write your ENTIRE response in English. Use professional executive business English.';
-  const prompt=`You are a world-class executive system designer and operations consultant.
-
-The user has provided raw notes for an operational system. Your mission:
-1. DEEPLY understand the business context and intent
-2. Professionally rewrite every section to executive standard
-3. Make everything SPECIFIC, MEASURABLE, and ACTIONABLE — no vague language allowed
-4. Fill empty fields with intelligent suggestions based on context from other fields
-5. Ensure total logical consistency across all sections
-6. ${langInstr}
-
-USER INPUT:
-━━━━━━━━━━━━━━━━━━━━━━━
-System Name: ${v('f-name')||'(not provided)'}
-Company/Dept: ${v('f-company')||'(not provided)'}
-Current Problem: ${v('f-situation')||'(not provided)'}
-Goal/Objective: ${v('f-objective')||'(not provided)'}
-Workflow Steps: ${v('f-workflow')||'(not provided)'}
-Decision Rules: ${v('f-rules')||'(not provided)'}
-Roles: ${v('f-roles')||'(not provided)'}
-KPIs: ${v('f-kpis')||'(not provided)'}
-Backup Plan: ${v('f-backup')||'(not provided)'}
-━━━━━━━━━━━━━━━━━━━━━━━
-
-QUALITY STANDARDS:
-• name → Formal professional system name (4–7 words)
-• company → Clean department/company identifier
-• situation → 2–3 sentences with quantified pain points (use numbers/%)
-• objective → 2–3 SMART goals with specific numbers, %, timeframes
-• workflow → Numbered steps "1. ... → 2. ..." with timing and handoffs
-• rules → "If [specific condition] → Then [action + timeframe]" — 4–5 rules
-• roles → "Role Title: Responsibility (ownership note)" — one per line
-• kpis → Bullet list: metric name, target value, measurement frequency
-• backup → "If [scenario] → Then [contingency]" — 3 specific scenarios
-
-Return ONLY a valid compact JSON, no markdown, no explanation:
-{"name":"...","company":"...","situation":"...","objective":"...","workflow":"...","rules":"...","roles":"...","kpis":"...","backup":"..."}`;
-
-  try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'x-api-key':apiKey,
-        'anthropic-version':'2023-06-01',
-        'anthropic-dangerous-direct-browser-access':'true'
-      },
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
-    });
-    const data=await res.json();
-    if(data.error){throw new Error(data.error.message)}
-    const text=data.content.map(b=>b.text||'').join('');
-    const parsed=JSON.parse(text.replace(/```json|```/g,'').trim());
-    ['name','company','situation','objective','workflow','rules','roles','kpis','backup'].forEach(f=>{
-      const el=document.getElementById('f-'+f);if(el&&parsed[f])el.value=parsed[f];
-    });
-    if(aiLang!==lang)switchLang(aiLang);
-    showAiOverlay(false);generated=true;generateDoc();
-    const sub=document.querySelector('#a4-doc .doc-subtitle');
-    if(sub&&!sub.querySelector('.ai-badge')){
-      const b=document.createElement('span');b.className='doc-badge ai-badge';b.textContent=t('ai-badge');sub.appendChild(b);
-    }
-    showToast(t('toast-ai'));
-  }catch(err){
-    showAiOverlay(false);console.error(err);showToast(t('toast-ai-err'));
-  }
-}
+function enhanceWithAI(){openLockedModal()}
 
 /* ── TOAST ── */
 let toastT;
